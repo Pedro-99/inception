@@ -1,0 +1,123 @@
+
+
+
+services:
+
+  nginx:
+    image: nginx:pedros
+    build: ./requirements/nginx/
+    container_name: nginx
+    env_file:
+      - .env
+    ports:
+      - 443:443
+    restart: always
+    depends_on:
+      wordpress:
+        condition: service_healthy
+    networks:
+      - pedros
+    volumes:
+      - wordpress:/var/www/html
+
+  mariadb:
+    image: mariadb:pedros
+    build: ./requirements/mariadb/
+    container_name: mariadb
+    env_file:
+      - .env
+    restart: always
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "3306"]
+      interval: 10s
+      timeout: 20s
+      retries: 20
+      start_period: 30s
+    networks:
+      - pedros
+    volumes:
+      - mariadb:/var/lib/mysql
+  
+  wordpress:
+    image: wordpress:pedros
+    build: ./requirements/wordpress/
+    container_name: wordpress
+    env_file:
+      - .env
+    restart: always
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "9000"]
+      interval: 10s
+      timeout: 20s
+      retries: 20
+      start_period: 30s
+    depends_on:
+      mariadb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - pedros
+    volumes:
+      - wordpress:/var/www/html
+  adminer:
+    image: adminer:pedros
+    build: ./requirements/bonus/adminer/
+    container_name: adminer
+    depends_on:
+      mariadb:
+        condition: service_healthy
+    ports:
+      - 9090:9090
+    networks:
+      - pedros
+    restart: always
+  static_webp:
+    image: static_webp:pedros
+    build: ./requirements/bonus/static_webp/
+    container_name: static_webp
+    depends_on:
+      mariadb:
+        condition: service_healthy
+    ports:
+      - 8888:8888
+    networks:
+      - pedros
+    restart: always
+
+  cadvisor:
+    image: cadvisor
+    build: ./requirements/bonus/adminer/
+    container_name: cadvisor
+    # privileged: true
+    ports:
+      - "8080:8080"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    restart: always
+  redis:
+      image: redis:pedros
+      container_name: redis
+      build: ./requirements/bonus/redis/
+      networks:
+        - pedros
+      restart: always
+      healthcheck:
+        test: ["CMD", "nc", "-z", "localhost", "6379"]
+        interval: 10s
+        timeout: 20s
+        retries: 20
+networks:
+  pedros:
+    name: pedros
+
+
+volumes:
+  wordpress:
+    name: wordpress
+  mariadb:
+    name: mariadb
