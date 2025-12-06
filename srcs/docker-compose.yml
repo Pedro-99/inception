@@ -18,7 +18,7 @@ services:
     networks:
       - pedros
     volumes:
-      - /home/${LOGIN}/data/wordpress:/var/www/html
+      - wordpress:/var/www/html
 
   mariadb:
     image: mariadb:pedros
@@ -28,15 +28,15 @@ services:
       - .env.local
     restart: always
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "--socket=/var/run/mysqld/mysqld.sock"]
+      test: ["CMD", "nc", "-z", "localhost", "3306"]
       interval: 10s
-      timeout: 20s
-      retries: 5
+      timeout: 10s
+      retries: 22
       start_period: 30s
     networks:
       - pedros
     volumes:
-      - /home/${LOGIN}/data/mariadb:/var/lib/mysql
+      - mariadb:/var/lib/mysql
   
   wordpress:
     image: wordpress:pedros
@@ -48,8 +48,8 @@ services:
     healthcheck:
       test: ["CMD", "nc", "-z", "localhost", "${WORDPRESS_PORT}"]
       interval: 10s
-      timeout: 20s
-      retries: 5
+      timeout: 10s
+      retries: 22
       start_period: 30s
     depends_on:
       mariadb:
@@ -57,8 +57,25 @@ services:
     networks:
       - pedros
     volumes:
-      - /home/${LOGIN}/data/wordpress:/var/www/html
+      - wordpress:/var/www/html
 
 networks:
   pedros:
     name: pedros
+
+
+
+volumes:
+  wordpress:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /home/${LOGIN}/data/wordpress
+
+  mariadb:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /home/${LOGIN}/data/mariadb

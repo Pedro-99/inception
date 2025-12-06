@@ -4,9 +4,11 @@ env_file		=		./srcs/.env.local
 all: up
 
 up:
+	@docker compose --file $(compose_file) --env-file $(env_file) up -d --build
+
+volumes:
 	@mkdir -p /home/$(USER)/data/wordpress
 	@mkdir -p /home/$(USER)/data/mariadb
-	@docker compose --file $(compose_file) --env-file $(env_file) up -d --build
 
 down:
 	@docker compose --file $(compose_file) --env-file $(env_file) down

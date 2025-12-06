@@ -1,20 +1,14 @@
 #!/bin/bash
 
-set -e
+service mariadb start
 
-if [ ! -d "/var/lib/mysql/mysql" ]; then
-    echo "Initializing MariaDB data directory..."
-    mariadb-install-db --user=mysql --datadir=/var/lib/mysql
+sleep 5
 
-    cat > /tmp/init.sql <<EOF
-CREATE DATABASE IF NOT EXISTS $WP_DB;
-CREATE USER IF NOT EXISTS '$WP_USER'@'%' IDENTIFIED BY '$WP_USER_PASS';
-GRANT ALL PRIVILEGES ON $WP_DB.* TO '$WP_USER'@'%';
-FLUSH PRIVILEGES;
-EOF
+mariadb -e "CREATE DATABASE IF NOT EXISTS  $MARIADB_DATABASE;"
+mariadb -e "CREATE USER '$MARIADB_USER'@'%' IDENTIFIED BY '$MARIADB_PASSWORD';"
+mariadb -e "GRANT ALL PRIVILEGES ON $MARIADB_DATABASE.* TO '$MARIADB_USER'@'%' IDENTIFIED BY '$MARIADB_PASSWORD';"
+mariadb -e "FLUSH PRIVILEGES;"
 
-    exec mariadbd-safe --datadir=/var/lib/mysql --bind-address=0.0.0.0 --port="$MARIADB_PORT" --init-file=/tmp/init.sql
-else
-    echo "MariaDB data directory already initialized."
-    exec mariadbd-safe --datadir=/var/lib/mysql --bind-address=0.0.0.0 --port="$MARIADB_PORT"
-fi
+mariadb-admin shutdown
+
+exec mariadbd-safe --bind-address=0.0.0.0
