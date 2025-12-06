@@ -8,9 +8,9 @@ services:
     build: ./requirements/nginx/
     container_name: nginx
     env_file:
-      - .env
+      - .env.local
     ports:
-      - 443:443
+      - ${NGINX_PORT}:443
     restart: always
     depends_on:
       wordpress:
@@ -18,106 +18,47 @@ services:
     networks:
       - pedros
     volumes:
-      - wordpress:/var/www/html
+      - /home/${LOGIN}/data/wordpress:/var/www/html
 
   mariadb:
     image: mariadb:pedros
     build: ./requirements/mariadb/
     container_name: mariadb
     env_file:
-      - .env
+      - .env.local
     restart: always
     healthcheck:
-      test: ["CMD", "nc", "-z", "localhost", "3306"]
+      test: ["CMD", "mysqladmin", "ping", "--socket=/var/run/mysqld/mysqld.sock"]
       interval: 10s
       timeout: 20s
-      retries: 20
+      retries: 5
       start_period: 30s
     networks:
       - pedros
     volumes:
-      - mariadb:/var/lib/mysql
+      - /home/${LOGIN}/data/mariadb:/var/lib/mysql
   
   wordpress:
     image: wordpress:pedros
     build: ./requirements/wordpress/
     container_name: wordpress
     env_file:
-      - .env
+      - .env.local
     restart: always
     healthcheck:
-      test: ["CMD", "nc", "-z", "localhost", "9000"]
+      test: ["CMD", "nc", "-z", "localhost", "${WORDPRESS_PORT}"]
       interval: 10s
       timeout: 20s
-      retries: 20
+      retries: 5
       start_period: 30s
     depends_on:
       mariadb:
         condition: service_healthy
-      redis:
-        condition: service_healthy
     networks:
       - pedros
     volumes:
-      - wordpress:/var/www/html
-  adminer:
-    image: adminer:pedros
-    build: ./requirements/bonus/adminer/
-    container_name: adminer
-    depends_on:
-      mariadb:
-        condition: service_healthy
-    ports:
-      - 9090:9090
-    networks:
-      - pedros
-    restart: always
-  static_webp:
-    image: static_webp:pedros
-    build: ./requirements/bonus/static_webp/
-    container_name: static_webp
-    depends_on:
-      mariadb:
-        condition: service_healthy
-    ports:
-      - 8888:8888
-    networks:
-      - pedros
-    restart: always
+      - /home/${LOGIN}/data/wordpress:/var/www/html
 
-  cadvisor:
-    image: cadvisor
-    build: ./requirements/bonus/adminer/
-    container_name: cadvisor
-    # privileged: true
-    ports:
-      - "8080:8080"
-    volumes:
-      - /:/rootfs:ro
-      - /var/run:/var/run:ro
-      - /sys:/sys:ro
-      - /var/lib/docker/:/var/lib/docker:ro
-      - /dev/disk/:/dev/disk:ro
-    restart: always
-  redis:
-      image: redis:pedros
-      container_name: redis
-      build: ./requirements/bonus/redis/
-      networks:
-        - pedros
-      restart: always
-      healthcheck:
-        test: ["CMD", "nc", "-z", "localhost", "6379"]
-        interval: 10s
-        timeout: 20s
-        retries: 20
 networks:
   pedros:
     name: pedros
-
-
-volumes:
-  wordpress:
-    name: wordpress
-  mariadb:
-    name: mariadb
