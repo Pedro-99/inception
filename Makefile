@@ -1,5 +1,5 @@
 compose_file	=		./srcs/docker-compose.yml
-env_file		=		./srcs/.env.local
+env_file		=		./srcs/.env
 
 all: up
 

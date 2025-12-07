@@ -8,7 +8,7 @@ services:
     build: ./requirements/nginx/
     container_name: nginx
     env_file:
-      - .env.local
+      - .env
     ports:
       - ${NGINX_PORT}:443
     restart: always
@@ -25,7 +25,7 @@ services:
     build: ./requirements/mariadb/
     container_name: mariadb
     env_file:
-      - .env.local
+      - .env
     restart: always
     healthcheck:
       test: ["CMD", "nc", "-z", "localhost", "3306"]
@@ -43,7 +43,7 @@ services:
     build: ./requirements/wordpress/
     container_name: wordpress
     env_file:
-      - .env.local
+      - .env
     restart: always
     healthcheck:
       test: ["CMD", "nc", "-z", "localhost", "${WORDPRESS_PORT}"]
