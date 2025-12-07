@@ -3,7 +3,7 @@ env_file		=		./srcs/.env.local
 
 all: up
 
-up:
+up: volumes
 	@docker compose --file $(compose_file) --env-file $(env_file) up -d --build
 
 volumes:
