@@ -1,17 +1,16 @@
-compose_file	=		./srcs/docker-compose.yml
-env_file		=		./srcs/.env
+compose_file = ./srcs/docker-compose.yml
 
 all: up
 
 up: volumes
-	@docker compose --file $(compose_file) --env-file $(env_file) up -d --build
+	@docker compose --file $(compose_file) up -d --build
 
 volumes:
 	@mkdir -p /home/$(USER)/data/wordpress
 	@mkdir -p /home/$(USER)/data/mariadb
 
 down:
-	@docker compose --file $(compose_file) --env-file $(env_file) down
+	@docker compose --file $(compose_file) down
 
 clean: down
 	@docker system prune -af
@@ -19,7 +18,7 @@ clean: down
 fclean: clean
 	@sudo rm -rf /home/$(USER)/data/wordpress/*
 	@sudo rm -rf /home/$(USER)/data/mariadb/*
-	@docker volume rm $(docker volume ls -q) 2>/dev/null || true
+	@docker volume rm $$(docker volume ls -q | grep -E "wordpress|mariadb") 2>/dev/null || true
 
-re: fclean all
+re: fclean up
 
