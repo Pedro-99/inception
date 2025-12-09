@@ -1,5 +1,13 @@
 #!/bin/bash
 
+# Wait for MariaDB to be ready
+until mariadb -h mariadb -u"$MARIADB_USER" -p"$MARIADB_PASSWORD" -e "SELECT 1" >/dev/null 2>&1; do
+       	echo "Waiting for MariaDB to be ready..." 
+	sleep 3
+done
+
+echo "MariaDB is ready!"
+
 # Only download WordPress if not already present
 if [ ! -f "wp-config.php" ]; then
     echo "Setting up WordPress..."
